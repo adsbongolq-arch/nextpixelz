@@ -7,6 +7,9 @@ if (ENV === 'local') {
     define('BASE_URL', 'https://nextpixelz.net/');
 }
 
+// Global App Settings
+define('WHATSAPP_NUMBER', '8801234567890'); // Used for wa.me links
+
 // Database Credentials
 if (ENV === 'local') {
     define('DB_HOST', 'localhost');

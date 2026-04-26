@@ -2,10 +2,11 @@
 session_start();
 
 require_once __DIR__ . '/../app/Core/Config.php';
+require_once __DIR__ . '/../app/Core/Database.php';
+require_once __DIR__ . '/../app/Core/InitDB.php';
 
-// We don't initialize the DB immediately to save overhead on static pages, 
-// but it is available when needed via Database::getInstance()->getConnection();
-// require_once __DIR__ . '/../app/Core/Database.php';
+// Initialize DB schema automatically
+InitDB::setup();
 
 // Simple routing mechanism
 $url = isset($_GET['url']) ? rtrim($_GET['url'], '/') : 'home';
@@ -13,6 +14,12 @@ $url = filter_var($url, FILTER_SANITIZE_URL);
 $urlParts = explode('/', $url);
 
 $page = empty($urlParts[0]) ? 'home' : $urlParts[0];
+
+// Handle API requests
+if ($page === 'api') {
+    require_once __DIR__ . '/api.php';
+    exit;
+}
 
 // Basic Page Routing
 $pageFile = __DIR__ . '/../views/pages/' . $page . '.php';
