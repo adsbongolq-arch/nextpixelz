@@ -7,6 +7,13 @@ class Database {
 
     private function __construct() {
         try {
+            // Auto-create database if on local environment
+            if (ENV === 'local') {
+                $tempConn = new PDO("mysql:host=" . DB_HOST . ";charset=utf8mb4", DB_USER, DB_PASS);
+                $tempConn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+                $tempConn->exec("CREATE DATABASE IF NOT EXISTS `" . DB_NAME . "`");
+            }
+
             $dsn = "mysql:host=" . DB_HOST . ";dbname=" . DB_NAME . ";charset=utf8mb4";
             $options = [
                 PDO::ATTR_ERRMODE            => PDO::ERRMODE_EXCEPTION,
