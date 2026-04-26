@@ -6,19 +6,22 @@ header('Content-Type: application/json');
 
 $action = $_GET['action'] ?? '';
 
+// ─── Place Order ────────────────────────────────────────────────────
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && $action === 'order') {
-    $companyName = $_POST['company_name'] ?? '';
-    $phone = $_POST['phone'] ?? '';
-    $serviceName = $_POST['service_name'] ?? '';
+    $companyName = trim($_POST['company_name'] ?? '');
+    $phone       = trim($_POST['phone']        ?? '');
+    $serviceName = trim($_POST['service_name'] ?? '');
+    $packageId   = intval($_POST['package_id']   ?? 0) ?: null;
+    $packageName = trim($_POST['package_name'] ?? '') ?: null;
+    $packageType = trim($_POST['package_type'] ?? '') ?: null;
 
     if (empty($serviceName)) {
-        echo json_encode(['success' => false, 'message' => 'Service name is missing.']);
+        echo json_encode(['success' => false, 'message' => 'Service name is required.']);
         exit;
     }
 
     $auth = new AuthHandler();
-    
-    // If not logged in, require company name and phone
+
     if (!AuthHandler::isLoggedIn()) {
         if (empty($companyName) || empty($phone)) {
             echo json_encode(['success' => false, 'message' => 'Company Name and Phone are required.']);
@@ -29,13 +32,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $action === 'order') {
         $companyName = $_SESSION['company_name'];
     }
 
-    $userId = $_SESSION['user_id'];
+    $userId      = $_SESSION['user_id'];
     $orderHandler = new OrderHandler();
-    
-    $orderId = $orderHandler->createOrder($userId, $serviceName);
-    
-    if ($orderId) {
-        $waLink = $orderHandler->getWhatsAppLink($companyName, $serviceName, $orderId);
+    $orderUid    = $orderHandler->createOrder($userId, $serviceName, $packageId, $packageName, $packageType);
+
+    if ($orderUid) {
+        $waLink = $orderHandler->getWhatsAppLink($companyName, $serviceName, $orderUid, $packageName, $packageType);
         echo json_encode(['success' => true, 'redirect_url' => $waLink]);
     } else {
         echo json_encode(['success' => false, 'message' => 'Failed to create order.']);
@@ -43,62 +45,71 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $action === 'order') {
     exit;
 }
 
-// Admin Actions
+// ─── Fetch packages for a service (for modal dropdown) ──────────────
+require_once __DIR__ . '/../app/Modules/Package/PackageHandler.php';
+
+if ($_SERVER['REQUEST_METHOD'] === 'GET' && $action === 'get_packages') {
+    $serviceId = intval($_GET['service_id'] ?? 0);
+    if (!$serviceId) { echo json_encode([]); exit; }
+    $ph = new PackageHandler();
+    echo json_encode($ph->getByService($serviceId));
+    exit;
+}
+
+// ─── Admin Actions ──────────────────────────────────────────────────
 require_once __DIR__ . '/../app/Modules/Admin/AdminHandler.php';
 require_once __DIR__ . '/../app/Modules/Billing/BillingEngine.php';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && $action === 'admin_approve') {
-    if (!AuthHandler::isAdmin()) {
-        echo json_encode(['success' => false, 'message' => 'Unauthorized']);
-        exit;
-    }
-    $orderId = $_POST['order_id'] ?? 0;
-    $totalAmount = $_POST['total_amount'] ?? 0;
-
+    if (!AuthHandler::isAdmin()) { echo json_encode(['success' => false, 'message' => 'Unauthorized']); exit; }
     $admin = new AdminHandler();
-    if ($admin->approveOrder($orderId, $totalAmount)) {
+    if ($admin->approveOrder($_POST['order_id'] ?? 0, $_POST['total_amount'] ?? 0)) {
         echo json_encode(['success' => true]);
     } else {
-        echo json_encode(['success' => false, 'message' => 'Failed to approve order']);
+        echo json_encode(['success' => false, 'message' => 'Failed']);
     }
     exit;
 }
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && $action === 'admin_invoice') {
-    if (!AuthHandler::isAdmin()) {
-        echo json_encode(['success' => false, 'message' => 'Unauthorized']);
-        exit;
-    }
-    $orderId = $_POST['order_id'] ?? 0;
-    
+    if (!AuthHandler::isAdmin()) { echo json_encode(['success' => false, 'message' => 'Unauthorized']); exit; }
     $billing = new BillingEngine();
-    $result = $billing->generateInvoice($orderId);
-    
-    echo json_encode($result);
+    echo json_encode($billing->generateInvoice($_POST['order_id'] ?? 0));
     exit;
 }
 
-// Loyalty Hub Actions
+// Package CRUD
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && $action === 'package_create') {
+    if (!AuthHandler::isAdmin()) { echo json_encode(['success' => false, 'message' => 'Unauthorized']); exit; }
+    $ph = new PackageHandler();
+    $ok = $ph->create($_POST['service_id'], $_POST['name'], $_POST['type'], $_POST['price'], $_POST['features']);
+    echo json_encode(['success' => $ok]);
+    exit;
+}
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && $action === 'package_delete') {
+    if (!AuthHandler::isAdmin()) { echo json_encode(['success' => false, 'message' => 'Unauthorized']); exit; }
+    $ph = new PackageHandler();
+    echo json_encode(['success' => $ph->delete($_POST['package_id'] ?? 0)]);
+    exit;
+}
+
+// ─── Loyalty ────────────────────────────────────────────────────────
 require_once __DIR__ . '/../app/Modules/Loyalty/LoyaltyHandler.php';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && $action === 'spin_wheel') {
-    if (!AuthHandler::isLoggedIn()) {
-        echo json_encode(['success' => false, 'message' => 'Unauthorized']);
-        exit;
-    }
+    if (!AuthHandler::isLoggedIn()) { echo json_encode(['success' => false, 'message' => 'Unauthorized']); exit; }
     $loyalty = new LoyaltyHandler();
-    $result = $loyalty->spinWheel($_SESSION['user_id']);
-    echo json_encode($result);
+    echo json_encode($loyalty->spinWheel($_SESSION['user_id']));
     exit;
 }
 
-// Logout logic
+// Logout
 if ($action === 'logout') {
     AuthHandler::logout();
     echo json_encode(['success' => true]);
     exit;
 }
 
-// 404 for invalid API
 header("HTTP/1.0 404 Not Found");
 echo json_encode(['error' => 'Invalid endpoint']);
