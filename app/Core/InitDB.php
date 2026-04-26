@@ -3,7 +3,10 @@ require_once __DIR__ . '/Database.php';
 
 class InitDB {
     public static function setup() {
-        if (isset($_SESSION['db_setup_done']) && $_SESSION['db_setup_done'] === true) {
+        // Version bump this when you add new tables/columns
+        $schemaVersion = 4;
+
+        if (isset($_SESSION['db_schema_version']) && $_SESSION['db_schema_version'] >= $schemaVersion) {
             return;
         }
 
@@ -122,9 +125,9 @@ class InitDB {
                 foreach ($packages as $p) $pins->execute($p);
             }
 
-            $_SESSION['db_setup_done'] = true;
+            $_SESSION['db_schema_version'] = $schemaVersion;
         } catch (Exception $e) {
-            // Silent fail
+            // Silent fail — log in production
         }
     }
 }
