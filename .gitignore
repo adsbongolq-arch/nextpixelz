@@ -1,0 +1,33 @@
+# IDE / Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS generated files
+.DS_Store
+Thumbs.db
+
+# Logs
+logs/
+*.log
+error_log
+
+# Uploads / User generated content
+public/uploads/*
+!public/uploads/.gitkeep
+
+# Database
+*.sql
+*.sqlite
+
+# Environment/Config 
+# (If you decide to use .env in the future)
+.env
+
+# Vendor / Dependencies (If Composer is used later)
+vendor/
+node_modules/
+
+# Ignore Claude config files if needed (Optional)
+# .claude/
