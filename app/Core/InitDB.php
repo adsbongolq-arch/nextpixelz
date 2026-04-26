@@ -17,10 +17,15 @@ class InitDB {
                 phone VARCHAR(20) NOT NULL,
                 password_hash VARCHAR(255) NULL,
                 wallet_credits DECIMAL(10,2) DEFAULT 0.00,
+                spins_available INT DEFAULT 0,
                 role ENUM('admin', 'client') DEFAULT 'client',
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 UNIQUE KEY unique_phone (phone)
             )");
+
+            try {
+                $db->exec("ALTER TABLE users ADD COLUMN spins_available INT DEFAULT 0");
+            } catch (Exception $e) {}
 
             // Create Services Table
             $db->exec("CREATE TABLE IF NOT EXISTS services (

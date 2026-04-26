@@ -78,6 +78,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $action === 'admin_invoice') {
     exit;
 }
 
+// Loyalty Hub Actions
+require_once __DIR__ . '/../app/Modules/Loyalty/LoyaltyHandler.php';
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && $action === 'spin_wheel') {
+    if (!AuthHandler::isLoggedIn()) {
+        echo json_encode(['success' => false, 'message' => 'Unauthorized']);
+        exit;
+    }
+    $loyalty = new LoyaltyHandler();
+    $result = $loyalty->spinWheel($_SESSION['user_id']);
+    echo json_encode($result);
+    exit;
+}
+
 // Logout logic
 if ($action === 'logout') {
     AuthHandler::logout();

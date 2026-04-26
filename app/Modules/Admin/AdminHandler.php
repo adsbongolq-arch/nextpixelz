@@ -33,7 +33,17 @@ class AdminHandler {
 
     public function approveOrder($orderId, $totalAmount) {
         $stmt = $this->db->prepare("UPDATE orders SET status = 'Completed', total_amount = :amount WHERE id = :id");
-        return $stmt->execute([':amount' => $totalAmount, ':id' => $orderId]);
+        $success = $stmt->execute([':amount' => $totalAmount, ':id' => $orderId]);
+        
+        if ($success) {
+            // Get user_id
+            $order = $this->getOrderDetails($orderId);
+            if ($order) {
+                $userStmt = $this->db->prepare("UPDATE users SET spins_available = spins_available + 1 WHERE id = :user_id");
+                $userStmt->execute([':user_id' => $order['user_id']]);
+            }
+        }
+        return $success;
     }
     
     public function getOrderDetails($orderId) {
