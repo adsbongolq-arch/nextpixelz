@@ -55,10 +55,9 @@
             NextPixelz
         </a>
         <div class="hidden md:flex space-x-6 items-center">
-            <a href="<?= BASE_URL ?>" class="hover:text-accent transition-colors">Home</a>
-            <a href="<?= BASE_URL ?>services" class="hover:text-accent transition-colors">Services</a>
-            <a href="<?= BASE_URL ?>dashboard" class="hover:text-accent transition-colors">Client Portal</a>
-            <button onclick="if(typeof openOrderModal === 'function') { openOrderModal('General Service'); } else { window.location.href='<?= BASE_URL ?>'; }" class="bg-accent text-white px-5 py-2 rounded-md font-semibold hover:bg-orange-600 shadow-accent-glow">Start Order</button>
+            <a href="<?= BASE_URL ?>index.php" class="hover:text-accent transition-colors">Home</a>
+            <a href="<?= BASE_URL ?>dashboard.php" class="hover:text-accent transition-colors">Client Portal</a>
+            <button onclick="if(typeof openOrderModal === 'function') { openOrderModal('General Service'); } else { window.location.href='<?= BASE_URL ?>index.php'; }" class="bg-accent text-white px-5 py-2 rounded-md font-semibold hover:bg-orange-600 shadow-accent-glow">Start Order</button>
         </div>
     </nav>
     <main>
