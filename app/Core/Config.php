@@ -9,6 +9,7 @@ if (ENV === 'local') {
 
 // Global App Settings
 define('WHATSAPP_NUMBER', '8801234567890'); // Used for wa.me links
+define('ADMIN_PHONE', '01700000000'); // Set this to the admin's phone number
 
 // Database Credentials
 if (ENV === 'local') {

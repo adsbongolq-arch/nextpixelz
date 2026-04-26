@@ -50,6 +50,19 @@ $orders = $orderHandler->getUserOrders($userId);
                                             <span class="bg-orange-500/20 text-orange-400 px-3 py-1 rounded-full text-xs font-semibold border border-orange-500/30">Pending</span>
                                         <?php elseif ($order['status'] === 'Completed'): ?>
                                             <span class="bg-emerald-500/20 text-emerald-400 px-3 py-1 rounded-full text-xs font-semibold border border-emerald-500/30">Completed</span>
+                                            
+                                            <?php 
+                                            require_once __DIR__ . '/../../app/Modules/Billing/BillingEngine.php';
+                                            $billing = new BillingEngine();
+                                            $invoiceUrl = $billing->getInvoiceForOrder($order['id']);
+                                            if($invoiceUrl): 
+                                            ?>
+                                                <a href="<?= BASE_URL . $invoiceUrl ?>" target="_blank" class="ml-2 inline-flex items-center text-xs text-accent hover:text-white transition-colors">
+                                                    <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                                                    Invoice
+                                                </a>
+                                            <?php endif; ?>
+                                            
                                         <?php else: ?>
                                             <span class="bg-gray-500/20 text-gray-400 px-3 py-1 rounded-full text-xs font-semibold border border-gray-500/30"><?= htmlspecialchars($order['status']) ?></span>
                                         <?php endif; ?>

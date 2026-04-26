@@ -43,6 +43,41 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $action === 'order') {
     exit;
 }
 
+// Admin Actions
+require_once __DIR__ . '/../app/Modules/Admin/AdminHandler.php';
+require_once __DIR__ . '/../app/Modules/Billing/BillingEngine.php';
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && $action === 'admin_approve') {
+    if (!AuthHandler::isAdmin()) {
+        echo json_encode(['success' => false, 'message' => 'Unauthorized']);
+        exit;
+    }
+    $orderId = $_POST['order_id'] ?? 0;
+    $totalAmount = $_POST['total_amount'] ?? 0;
+
+    $admin = new AdminHandler();
+    if ($admin->approveOrder($orderId, $totalAmount)) {
+        echo json_encode(['success' => true]);
+    } else {
+        echo json_encode(['success' => false, 'message' => 'Failed to approve order']);
+    }
+    exit;
+}
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && $action === 'admin_invoice') {
+    if (!AuthHandler::isAdmin()) {
+        echo json_encode(['success' => false, 'message' => 'Unauthorized']);
+        exit;
+    }
+    $orderId = $_POST['order_id'] ?? 0;
+    
+    $billing = new BillingEngine();
+    $result = $billing->generateInvoice($orderId);
+    
+    echo json_encode($result);
+    exit;
+}
+
 // Logout logic
 if ($action === 'logout') {
     AuthHandler::logout();
